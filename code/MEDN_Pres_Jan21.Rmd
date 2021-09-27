@@ -1,0 +1,259 @@
+---
+title: 'Cabrillo National Monument <br> Rocky Intertidal Update <br> <br> <br> <br>'
+author: 'Lauren Pandori'
+date: 'January 2021'
+output: 
+  ioslides_presentation:
+    css: lpcss.css
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Lauren Pandori - Marine Biologist
+- PhD work on southern California mussel declines
+- Two postdocs: long-term monitoring and ocean acidification
+- R statistics and data visualization enthusiast
+
+```{r, out.width = "50%", fig.cap = 'PC: L. Ortiz'}
+knitr::include_graphics('Photos/field_LOrtiz_OCreg.png')
+```
+
+## Program Overview
+- Annual monitoring of 3 zones at CABR
+- Partnership with MARINe and Navy
+- Data collected by VIPs, scientists and interns
+
+```{r, out.width = "40%", fig.pos="h", fig.cap = 'PC: MARINe Instagram'}
+knitr::include_graphics('Photos/MARINe_CABR2.png')
+```
+
+## Cabrillo National Monument Coastal Area
+- Monument area is 160 acres
+- ~340,000 annual visitors to coastal area
+```{r, out.width = "60%", fig.pos="h"}
+knitr::include_graphics('Photos/SD_Map_Google.png')
+```
+
+## 3 Zones in Cabrillo Coastal Area
+- Represent a visitation gradient
+- Long-term monitoring conducted annually
+- Updating GIS layer and intertidal guide
+```{r, out.width = "60%", fig.pos="h"}
+knitr::include_graphics('Photos/CABR_GIS_Map2.png')
+```
+
+## Long-term Monitoring Methods (1990-2020)
+- Photo-plots: percent cover of target species
+
+```{r, out.width = "40%", fig.pos="h"}
+knitr::include_graphics('Photos/marine_spp_photoplot.png')
+```
+
+## Long-term Monitoring Methods (1990-2020)
+- Photo-plots: percent cover of target species 
+- Transects: coverage of target species 
+```{r, out.width = "60%", fig.pos="h"}
+knitr::include_graphics('Photos/marine_spp_transect2.png')
+```
+
+## Long-term Monitoring Methods (1990-2020)
+- Photo-plots: percent cover of target species 
+- Transects: coverage of target species 
+- Owl Limpets: size and abundance of individuals > 15 mm
+
+```{r, out.width = "20%", fig.pos="h"}
+knitr::include_graphics('Photos/marine_spp_lottia.png')
+```
+
+## Prior Visualization: Time Series of Percent Cover
+```{r, include = FALSE}
+# set-up chunk for figures
+library(readxl)
+library(tidyverse)
+library(inauguration)
+
+photo <- read_excel('Raw Data/qsummarizer_TGT_SppN_rawdata.xlsx')
+
+  # limit to relevant data (species codes that match spp captured in target plot)
+  photo_target <- photo %>%
+    # just CABR site
+    filter(SiteCode %in% c('CAB1', 'CAB2', 'CAB3')) %>%
+    # make // spp code and zone
+    mutate(Zone2 = if_else(Zone == 'CHT', 'CHTBAL', 
+                   if_else(Zone == 'MYT', 'MYTCAL',
+                   if_else(Zone == 'SIL', 'SILCOM',
+                   if_else(Zone == 'POL', 'POLPOL', 'NA'))))) %>%
+    # filter for only matches
+    filter(Zone2 == SpeciesCode) %>%
+    # remove extra columns
+    select(-c(Zone2)) %>%
+    # summarize by spp and year
+    group_by(SiteCode, SiteName, SurveyYear, Zone, SpeciesCode, Scientific_name) %>%
+    summarize(avg_cover = mean(N),
+              sd_cover = sd(N)) %>%
+    rename(Target = Zone) %>%
+    rename(`Zone` = SiteName) %>%
+    # put in common names
+    mutate(Name = if_else(Target == 'CHT', 'Acorn Barnacle',
+                  if_else(Target == 'MYT', 'California Mussel',
+                  if_else(Target == 'SIL', 'Golden Rockweed',
+                  if_else(Target == 'POL', 'Goose Barnacle', 'NA')))))
+```
+
+```{r, echo = FALSE}
+ ggplot(data = filter(photo_target, Target %in% c('POL', 'SIL')), 
+        mapping = aes(x = SurveyYear, y = avg_cover, 
+                   group = Zone, color = Zone)) +
+        geom_line(size = 1.5) + 
+        facet_wrap(~ Name) + 
+        # colors
+        scale_color_manual(values = inauguration('inauguration_2021',3)) +
+        # axis labels
+        xlab('Survey Year') +
+        ylab('Percent Cover') +
+        # limits
+        coord_cartesian(ylim = c(0, 100)) +
+        # theme arguments 
+        theme_bw() +
+        theme(text = element_text(size = 16),
+          # make panels slightly farther apart
+          panel.spacing = unit(2, 'lines'),
+          # no background to wrap panels
+          strip.background = element_blank(),
+          strip.text = element_text(size = 18, color = 'black',face = 'italic'),
+          # panel labels outside x axis labels
+          strip.placement = 'outside',
+          # tilt and adjust position of x axis labels
+          axis.text.y = element_text(size = 16, color = 'black'),
+          axis.text.x = element_text(size = 16, color = 'black', angle = 45, hjust = 1),
+          legend.text = element_text(size = 16, color = 'black'),
+          # make caption serif text to match journal style
+          plot.caption = element_text(family = 'serif', 
+                                      size = 16, color = 'black', hjust = 0))
+
+boxbase <- ggplot(data = filter(photo_target, Target %in% c('POL', 'SIL')),
+         mapping = aes(y = Zone, x = avg_cover)) +
+           geom_boxplot(aes(fill = Zone)) +
+           facet_wrap(~Name) + 
+           scale_fill_manual(values = inauguration('inauguration_2021', 3)) +
+      # axes
+      xlab('Percent Cover') + 
+      # theme arguments 
+      theme_bw() +
+      theme(text = element_text(size = 16),
+            panel.spacing = unit(2, 'lines'),
+          # no background to wrap panels
+          strip.background = element_blank(),
+          strip.text = element_text(size = 20, color = 'black', face = 'italic'),
+          # panel labels outside x axis labels
+          strip.placement = 'outside',
+          # tilt and adjust position of x axis labels
+          axis.text.y = element_text(size = 16, color = 'black'),
+          axis.text.x = element_text(size = 16, color = 'black'),
+          # no legends
+          legend.position = 'none',
+          # make caption serif text to match journal style
+          plot.caption = element_text(family = 'serif', 
+                                      size = 16, color = 'black', hjust = 0))
+```
+
+## Plotting Variation Shows Where We've Been
+
+```{r, echo = FALSE}
+boxbase
+```
+
+Rockweed cover is more variable than barnacle cover
+
+## Plotting Variation Shows Where We Are
+
+```{r, echo = FALSE}
+boxbase + geom_point(data =
+          filter(photo_target, Target %in% c('POL', 'SIL') & SurveyYear == 2017), 
+                mapping = aes(y = Zone, x = avg_cover), size = 4, shape = 15)
+```
+
+Patterns put change in context, provide management insight
+
+## Goals for Fiscal Year 21
+- Update rocky intertidal monitoring SOP 
+- Implement annual biodiversity surveys
+- Link reporting to management needs 
+
+```{r, out.width = "30%", fig.pos="h"}
+knitr::include_graphics('Photos/npsfieldphoto.png')
+```
+
+## Data-driven Management
+- Identify scales of variation, trigger points and interventions
+
+```{r, echo = FALSE}
+boxbase
+```
+
+## Data-driven Management
+- Identify scales of variation, trigger points and interventions
+- Incorporate visitor use
+
+```{r, include = FALSE}
+trail <- read_csv('Raw Data/summary3.csv')
+
+trail <- trail %>%
+    select(Lot, Year, Count) %>%
+    group_by(Year) %>%
+    summarize(Visitation = sum(Count))
+
+trail2 <- filter(trail, Year != 2015)
+
+# no scientific notation 
+require(scales)
+```
+
+```{r, echo = FALSE}
+# make plot of visitation over time
+ggplot(data = trail2, 
+       mapping = aes(x = as.character(Year), y = Visitation)) +
+  geom_bar(stat = 'identity', fill = '#5445b1') + 
+  scale_y_continuous(labels = comma) +
+  # axis labels
+  ylab('Visitors to Coastal Area') +
+  xlab('Calendar Year') +
+  # y limits 
+  coord_cartesian(ylim = c(0, 400000)) +
+  # make format consistent
+   theme_bw() +
+      theme(text = element_text(size = 16),
+            panel.spacing = unit(2, 'lines'),
+          # no background to wrap panels
+          strip.background = element_blank(),
+          strip.text = element_text(size = 20, color = 'black', face = 'italic'),
+          # panel labels outside x axis labels
+          strip.placement = 'outside',
+          # adjust x axis labels
+          axis.text.y = element_text(size = 16, color = 'black'),
+          axis.text.x = element_text(size = 16, color = 'black'),
+          # no legends
+          legend.position = 'none')
+  
+```
+
+## Data-driven Management
+- Identify scales of variation, trigger points and interventions
+- Incorporate visitor use
+- Focus on community/trait-based analyses
+- Streamline reporting with RMarkdown
+
+```{r, out.width = "60%", fig.pos="h"}
+knitr::include_graphics('Photos/RMd_Screenshot.png')
+```
+
+## Questions?
+<Lauren_Pandori@nps.gov>
+
+```{r, out.width = "80%", fig.pos="h", fig.cap = 'PC: S. Wynns'}
+knitr::include_graphics('Photos/TidepoolSunset_SWynns.png')
+```
