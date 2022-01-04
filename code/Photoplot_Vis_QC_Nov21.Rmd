@@ -1,0 +1,79 @@
+---
+title: "Photo Plot Visual QA/QC"
+author: "L. Pandori"
+date: "11/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+
+```{r setup}
+
+##### load packages #####
+library(readxl)     # reads excel files
+library(ggdark)     # dark theme plots
+library(viridis)    # colorblind-friendly palettes
+library(tidyverse)  # tidyverse needs no explanation
+library(janitor)    # clean up names + datasets
+
+##### custom theme #####
+lltheme <- theme_bw() + theme(text = element_text(size = 12),
+                 # add more space between panels
+                 panel.spacing = unit(1, 'lines'),
+                 # no background to wrap panels
+                 strip.background = element_blank(),
+                 strip.text = element_text(size = 12, hjust = 0),
+                 # panel labels outside x axis labels
+                 strip.placement = 'outside',
+                 # adjust x axis labels
+                 axis.text.y = element_text(size = 11),
+                 axis.text.x = element_text(size = 11, angle = 45, hjust = 1))
+
+```
+
+```{r load and tidy data}
+
+##### load data #####
+
+# latest version of photoplot data
+photo <- read_excel('../data/MEDN_RI_DB_FA21/Photoplot_summary_by_plot_20211115.xlsx')
+
+# crosswalk table for old/new taxonomic categories
+align <- read_csv('../data/MEDN_RI_DB_FA21/TGT_all.csv')
+
+##### presets ##### - useful info for looping, etc.
+
+# recent survey years for each site
+yrs <- photo %>%
+  # filter for sites visited
+  filter(Was_surveyed == 'surveyed') %>%
+  group_by(SiteCode) %>%
+  # get first and last survey year for each site
+  summarize(start_yr = min(SurveyYear),
+            end_yr = max(SurveyYear)) %>%
+  # 
+  ungroup() %>%
+  # 
+  mutate(five_yr = end_yr - 4)
+  
+  
+
+
+##### tidy data #####
+
+
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
