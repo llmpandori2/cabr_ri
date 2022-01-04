@@ -40,3 +40,6 @@ vignettes/*.pdf
 
 # data
 /data
+
+# figures
+/figs
