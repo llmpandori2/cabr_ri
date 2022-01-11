@@ -22,3 +22,6 @@ target_sw <- target %>%
          Zone == 'SIL' & 
          SpeciesCode == 'SILCOM' &
          SeasonName == 'Fall')
+
+##### write csv output #####
+write_csv(target_sw, '../silcom_sw_jan22.csv')
