@@ -227,6 +227,43 @@ ggplot(data = heatmap_annual,
 ggsave('./figs/annual_report_figs_2021/lottia_heatmap_5yr.png',
        width = 7, height = 5)
 
+# make heatmap for all years
+# size class heatmap for annual report
+heatmap_all <- lim_measure %>%
+  # only CABR sites and in 10 yr study period (2010-2019)
+  filter(SiteCode %in% cabrsites & 
+           Size_class >= 15) %>%
+  # make site names align w/ report (zones not sites)
+  mutate(ZoneName = paste('Zone', substr(SiteName, 9, 12)),
+         Panel = if_else(SiteName == 'Cabrillo I', 'A', 
+                         if_else(SiteName == 'Cabrillo II', 'B', 'C'))) %>%
+  mutate(ZoneName = paste('(', Panel, ') ', ZoneName, sep = '')) %>%
+  # select necessary columns 
+  select(ZoneName, SurveyYear, Season, PlotNo, Size_class, N) %>%
+  # make Size_classes into lowest 5, then make character
+  mutate(Size_bin = 5*floor(Size_class/5),
+         Season = parse_factor(Season)) %>%
+  # group by site, survey year & plot, get total counts in each class
+  group_by(ZoneName, SurveyYear, Size_bin) %>%
+  summarise(`Mean count` = sum(N)/length(unique(PlotNo))) %>%
+  # make size bin column categorical with bin descriptor
+  mutate(Size_bin = parse_character(paste(Size_bin, '-', (Size_bin + 5))))
+
+ggplot(data = heatmap_all,
+       mapping = aes(x = SurveyYear, y = Size_bin, fill = `Mean count`)) + 
+  # give tiles black outline
+  geom_tile(color = 'black') + 
+  facet_wrap(~ZoneName, ncol = 1) + 
+  xlab('Sampling year') +
+  ylab(expression(italic('Lottia') ~ 'size (mm)')) +
+  scale_x_continuous(breaks = c(1990, 1995, 2000, 2005, 2010, 2015, 2020)) +
+  # reverse viridis (colorblind friendly palette) colors
+  scale_fill_viridis(begin = 1, end = 0) +
+  coord_equal() +
+  lltheme_heatmap
+
+ggsave('./figs/annual_report_figs_2021/lottia_heatmap_all.png', height = 10)
+
 ##### vis: lottia density time series ##### 
 # overall density summary
 density_summary <- lim_density %>%
