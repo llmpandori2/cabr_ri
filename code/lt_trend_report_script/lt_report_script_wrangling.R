@@ -235,6 +235,7 @@ write_csv(select(target_00, -site_name), paste0(tidy_folder, 'target_00.csv'))
 
 # remove crosswalk table
 remove(taxa_crosswalk)
+
 ##### tidy: timed search #####
 
 timed_search <- timed_search %>%
